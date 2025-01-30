@@ -27,7 +27,7 @@ A modern twist on the classic Pong game implemented using Object-Oriented Progra
    pip install pygame
 
    # Clone repository
-   git clone https://github.com/your-username/oop-pong-game.git
+   git clone https://github.com/Tonywccha/ponggame
    cd oop-pong-game
 
    # Run the game
