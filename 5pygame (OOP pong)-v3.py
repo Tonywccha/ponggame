@@ -278,8 +278,8 @@ class Game(object):
                     if obj.destruction( self )==True:
                         self.objlist.remove(obj)
                         del obj
-            if self.score[0] >= 1 or self.score[1] >= 100:
-                if self.score[0]>=1:
+            if self.score[0] >= 100 or self.score[1] >= 100:
+                if self.score[0]>=100:
                     winner='Left player'
                 else:
                     winner='Right player'
