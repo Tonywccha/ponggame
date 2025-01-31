@@ -2,6 +2,7 @@ import pygame
 import sys
 from pygame.locals import *
 import random
+import time
 
 
 class Paddle(object):
@@ -186,6 +187,7 @@ class Game(object):
     blue = (0, 128, 128)
     purple = (255, 0, 255)
     red = (196,0,0)
+    orange = (255, 165, 0)
 
     FPS = 60
 
@@ -230,11 +232,16 @@ class Game(object):
         if int(random.random()*10) > 5:
             self.objlist.append(Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 20, 20, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*3, self.black))
         enlargeexisted=False
+        speedupexisted=False
         for obj in self.objlist:
             if obj.type == 'enlarge':
                 enlargeexisted=True
+            elif obj.type == 'speedup':
+                speedupexisted =True
         if not( enlargeexisted ) and int(random.random()*10) > 7 :
             self.objlist.append(Enlarge( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.purple))
+        if not( speedupexisted ) and int(random.random()*10) > 7 :
+            self.objlist.append(SpeedUp( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.orange))
 
 
     def play(self):
@@ -267,9 +274,40 @@ class Game(object):
                     self.objlist.remove(obj)
                     del obj
                 elif obj.x < 0 or obj.x + obj.w > self.screen.get_size()[0]:
+                    #calculate score and destroy the object if not only 1 ball left
                     if obj.destruction( self )==True:
                         self.objlist.remove(obj)
                         del obj
+            if self.score[0] >= 1 or self.score[1] >= 100:
+                if self.score[0]>=1:
+                    winner='Left player'
+                else:
+                    winner='Right player'
+                game_final_message = self.font.render( winner+' won !!!', True, self.red)
+                game_final_message_rect = game_final_message.get_rect()
+                game_final_message_rect.center = (self.screen.get_size()[0]/2,self.screen.get_size()[1]/2)
+                game_final_message2 = self.font.render( 'Press any key to restart.', True, self.blue)
+                game_final_message2_rect = game_final_message2.get_rect()
+                game_final_message2_rect.center = (self.screen.get_size()[0]/2,self.screen.get_size()[1]/2+40)
+                
+                self.screen.blit(game_final_message, game_final_message_rect)
+                pygame.display.update()
+                time.sleep(3)
+                self.screen.blit(game_final_message2, game_final_message2_rect)
+                pygame.display.update()
+                pygame.event.clear()
+                while pygame.event.wait().type != pygame.KEYDOWN:
+                    pass
+
+                #Reset paddles parameters, scores and object list
+                self.left_bat.height=100
+                self.right_bat.height=100
+                self.left_bat.vy = 10
+                self.right_bat.vy = 10
+                self.objlist.clear()
+                self.objlist.append(Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 20, 20,(-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*3, self.black))
+                self.score=[0, 0]
+
             if generate == True:
                 self.generategameobject()               
 
