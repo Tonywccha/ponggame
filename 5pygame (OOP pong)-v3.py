@@ -284,11 +284,9 @@ class Game(object):
                 else:
                     winner='Right player'
                 game_final_message = self.font.render( winner+' won !!!', True, self.red)
-                game_final_message_rect = game_final_message.get_rect()
-                game_final_message_rect.center = (self.screen.get_size()[0]/2,self.screen.get_size()[1]/2)
+                game_final_message_rect = game_final_message.get_rect(center=(self.screen.get_size()[0]/2,self.screen.get_size()[1]/2))
                 game_final_message2 = self.font.render( 'Press any key to restart.', True, self.blue)
-                game_final_message2_rect = game_final_message2.get_rect()
-                game_final_message2_rect.center = (self.screen.get_size()[0]/2,self.screen.get_size()[1]/2+40)
+                game_final_message2_rect = game_final_message2.get_rect(center=(self.screen.get_size()[0]/2,self.screen.get_size()[1]/2+40))
                 
                 self.screen.blit(game_final_message, game_final_message_rect)
                 pygame.display.update()
@@ -324,10 +322,8 @@ class Game(object):
 
         leftscore = self.font.render(str(self.score[0]), True, self.red)
         rightscore = self.font.render(str(self.score[1]), True, self.blue)
-        leftscorerect = leftscore.get_rect()
-        rightscorerect = rightscore.get_rect()
-        leftscorerect.center = (40,40)
-        rightscorerect.center = (self.screen.get_size()[0]-50, 40)
+        leftscorerect = leftscore.get_rect(center=(40,40))
+        rightscorerect = rightscore.get_rect(center=(self.screen.get_size()[0]-50, 40))
         self.screen.blit(leftscore, leftscorerect)
         self.screen.blit(rightscore, rightscorerect)
         
