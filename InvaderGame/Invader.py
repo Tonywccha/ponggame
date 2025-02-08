@@ -55,13 +55,30 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.Surface([20, 20])
         self.image.fill(RED)
         self.rect = self.image.get_rect()
+        self.rect.y = 480
  
     def update(self):
         """ Update the player location. """
         pos = pygame.mouse.get_pos()
         self.rect.x = pos[0]
-        self.rect.y = pos[1]
+
  
+ 
+class Bullet(pygame.sprite.Sprite):
+    """ This class represents the bullet . """
+    def __init__(self):
+        # Call the parent class (Sprite) constructor
+        super().__init__()
+
+        self.image = pygame.Surface([4, 10])
+        self.image.fill(BLACK)
+
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        """ Move the bullet. """
+        self.rect.y -= 3
+
  
 class Game(object):
     """ This class represents an instance of the game. If we need to
@@ -77,6 +94,7 @@ class Game(object):
  
         # Create sprite lists
         self.block_list = pygame.sprite.Group()
+        self.bullet_list = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group()
  
         # Create the block sprites
@@ -103,6 +121,15 @@ class Game(object):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.game_over:
                     self.__init__()
+                else:
+                    # Fire a bullet if the user clicks the mouse button
+                    bullet = Bullet()
+                    # Set the bullet so it is where the player is
+                    bullet.rect.x = self.player.rect.x
+                    bullet.rect.y = self.player.rect.y
+                    # Add the bullet to the lists
+                    self.all_sprites_list.add(bullet)
+                    self.bullet_list.add(bullet)
  
         return False
  
@@ -114,15 +141,29 @@ class Game(object):
         if not self.game_over:
             # Move all the sprites
             self.all_sprites_list.update()
+            
  
             # See if the player block has collided with anything.
-            blocks_hit_list = pygame.sprite.spritecollide(self.player, self.block_list, True)
+            #blocks_hit_list = pygame.sprite.spritecollide(self.player, self.block_list, True)
+
+            for bullet in self.bullet_list:
+                # See if it hit a block
+                block_hit_list = pygame.sprite.spritecollide(bullet, self.block_list, True)
+                
+        
+                # For each block hit, remove the bullet and add to the score
+                for block in block_hit_list:
+                    self.bullet_list.remove(bullet)
+                    self.all_sprites_list.remove(bullet)
+                    self.score += 1
+                    print(self.score)
+        
+                # Remove the bullet if it flies up off the screen
+                if bullet.rect.y < -10:
+                    self.bullet_list.remove(bullet)
+                    self.all_sprites_list.remove(bullet)
  
-            # Check the list of collisions.
-            for block in blocks_hit_list:
-                self.score += 1
-                print(self.score)
-                # You can do something with "block" here.
+
  
             if len(self.block_list) == 0:
                 self.game_over = True
@@ -184,4 +225,3 @@ def main():
 # Call the main function, start up the game
 if __name__ == "__main__":
     main()
-    
