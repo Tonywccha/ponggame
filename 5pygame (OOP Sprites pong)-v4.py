@@ -36,14 +36,14 @@ class LeftPaddle(Paddle):
         super().__init__(x, y, width, height, colour, paddlespeed)
 
     def collide(self, obj:object, screen):
-        if obj.x < (self.x+self.width) and obj.collided==False and obj.ToBeDestructed == False:
+        if obj.rect.x < (self.x+self.width) and obj.collided==False and obj.ToBeDestructed == False:
             # Ball Rect = (px + pw - 1, abs(vy/vx)*(px+pw+r-bx)+by-r, 2*r , 2*r)
             projected_objx=(self.x+self.width-1)
-            projected_objy=(abs(obj.vy/obj.vx)*(self.x+self.width-1-obj.x)+obj.y)
+            projected_objy=(abs(obj.vy/obj.vx)*(self.x+self.width-1-obj.rect.x)+obj.rect.y)
 
-            if self.rect().colliderect(pygame.Rect(projected_objx, projected_objy, obj.w, obj.h)):
-                obj.x = projected_objx
-                obj.y = projected_objy
+            if self.rect().colliderect(pygame.Rect(projected_objx, projected_objy, obj.rect.w, obj.rect.h)):
+                obj.rect.x = projected_objx
+                obj.rect.y = projected_objy
                 #obj.collided=True
                 return True
             else:
@@ -57,14 +57,14 @@ class RightPaddle(Paddle):
         super().__init__(x, y, width, height, colour, paddlespeed)
 
     def collide(self, obj:object, screen):
-        if obj.x + obj.w > self.x and obj.collided==False and obj.ToBeDestructed == False:
+        if obj.rect.x + obj.rect.w > self.x and obj.collided==False and obj.ToBeDestructed == False:
             #Rect = ( (Px-2r+1), ( abs(vy/vx)*(bx-px+r+1)+by-r, 2r, 2r )
-            projected_objx=(self.x-obj.w+1)
-            projected_objy=(abs(obj.vy/obj.vx)*(obj.x-projected_objx)+obj.y)
+            projected_objx=(self.x-obj.rect.w+1)
+            projected_objy=(abs(obj.vy/obj.vx)*(obj.rect.x-projected_objx)+obj.rect.y)
             
-            if self.rect().colliderect(pygame.Rect(projected_objx, projected_objy, obj.w, obj.h)):
-                obj.x = projected_objx
-                obj.y = projected_objy
+            if self.rect().colliderect(pygame.Rect(projected_objx, projected_objy, obj.rect.w, obj.rect.h)):
+                obj.rect.x = projected_objx
+                obj.rect.y = projected_objy
                 #obj.collided=True
                 return True
             else:
@@ -73,31 +73,32 @@ class RightPaddle(Paddle):
             return False
 
 
-class GameObject(object):
+class GameObject(pygame.sprite.Sprite):
     def __init__(self, x:int, y:int, w:int, h:int, vx:float, vy:float, colour):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+        super().__init__()
+        #self.image and self.rect are for sprite.Group.draw() method to blit the image to Surface
+        self.image = pygame.Surface([w, h])
+        self.image.fill(colour)
+        self.image.set_colorkey((255,255,255))
+        self.rect=self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
         self.vx = vx
         self.vy = vy
-        self.colour = colour
         self.collided=False
         self.ToBeDestructed=False
-
-    def rect(self):
-        return pygame.Rect(self.x, self.y, self.w, self.h)
     
-    def move(self, screen):
-        if self.y < 0:
+    
+    def update(self, screen:pygame.Surface):
+        if self.rect.y < 0:
             self.vy = abs(self.vy)
-        elif  self.y+self.h > screen.get_size()[1]:
+        elif  self.rect.y+self.rect.h > screen.get_size()[1]:
             self.vy = -1 * abs(self.vy)
-        self.x += self.vx
-        self.y += self.vy
+        self.rect.x += self.vx
+        self.rect.y += self.vy
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, self.colour, self.rect())
+    #def draw(self, screen):
+    #    pygame.draw.rect(screen, self.colour, self.rect())
 
     def destruction(self, game):
         return True
@@ -109,6 +110,10 @@ class GameObject(object):
 class Enlarge(GameObject):
     def __init__(self, x:int, y:int, w:int, h:int, vx:float, vy:float, colour):
         super().__init__(x, y, w, h, vx, vy, colour)
+        self.image = pygame.image.load("/Users/tony/Documents/python/pygameprojects/green-powerup40x40.png")
+        self.rect=self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
         self.type='enlarge'
         self.collided=False
 
@@ -124,6 +129,10 @@ class Enlarge(GameObject):
 class SpeedUp(GameObject):
     def __init__(self, x:int, y:int, w:int, h:int, vx:float, vy:float, colour):
         super().__init__(x, y, w, h, vx, vy, colour)
+        self.image = pygame.image.load("/Users/tony/Documents/python/pygameprojects/pink-powerup40x40.png")
+        self.rect=self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
         self.type='speedup'
         self.collided=False
 
@@ -142,17 +151,19 @@ class Ball(GameObject):
         super().__init__(x, y, w, h, vx, vy, colour)
         self.radius = (w/2)
         self.type='ball'
+        self.image = pygame.image.load("/Users/tony/Documents/python/pygameprojects/ball.png")
+        self.rect=self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.image.set_colorkey((255,255,255))
 
-    def draw(self, surface):
-        pygame.draw.circle(surface, self.colour, (self.x+self.radius, self.y+self.radius), self.radius, 0)
-    
     def destruction(self, game):
-        if self.x < 0:
+        if self.rect.x < 0:
             game.score[1] += 1
         else:
             game.score[0] += 1
-        self.x = int(game.screen.get_size()[0]/2)
-        self.y = int(game.screen.get_size()[1]/2)
+        self.rect.x = int(game.screen.get_size()[0]/2)
+        self.rect.y = int(game.screen.get_size()[1]/2)
         self.vx =(-1)**int(random.random()*10)*3
         self.vy =(-1)**int(random.random()*10)*3
         numberofballexist = 0
@@ -197,12 +208,15 @@ class Game(object):
         pygame.init()
         paddlesize=(20, 100)
         paddle_initial_speed=10
-        self.objlist = []
+        #self.objlist =[]
+        self.objlist = pygame.sprite.Group()
         self.score=[0, 0]
+        
+        self.screen = pygame.display.set_mode([600,500])
 
-        self.screen = pygame.display.set_mode((600,500))
-
-        self.objlist.append(Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 20, 20,(-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*3, self.black))
+        #self.objlist.append(Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 20, 20,(-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*3, self.black))
+        ball=Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 20, 20,(-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*3, self.black)
+        self.objlist.add( ball )
         
         #self.ball = Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 3, 3, 10, self.black)
         self.left_bat = LeftPaddle(0, int(self.screen.get_size()[1]/2-paddlesize[1]/2), paddlesize[0], paddlesize[1], self.red, paddle_initial_speed)
@@ -230,7 +244,7 @@ class Game(object):
 
     def generategameobject(self):
         if int(random.random()*10) > 5:
-            self.objlist.append(Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 20, 20, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*3, self.black))
+            self.objlist.add(Ball( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 20, 20, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*3, self.black))
         enlargeexisted=False
         speedupexisted=False
         for obj in self.objlist:
@@ -239,9 +253,12 @@ class Game(object):
             elif obj.type == 'speedup':
                 speedupexisted =True
         if not( enlargeexisted ) and int(random.random()*10) > 7 :
-            self.objlist.append(Enlarge( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.purple))
+            #self.objlist.append(Enlarge( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.purple))
+            self.objlist.add(Enlarge( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.purple))
+                
         if not( speedupexisted ) and int(random.random()*10) > 7 :
-            self.objlist.append(SpeedUp( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.orange))
+            #self.objlist.append(SpeedUp( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.orange))
+            self.objlist.add(SpeedUp( int(self.screen.get_size()[0]/2),  int(self.screen.get_size()[1]/2), 10, 10, (-1)**int(random.random()*10)*3, (-1)**int(random.random()*10)*6, self.orange))
 
 
     def play(self):
@@ -257,8 +274,9 @@ class Game(object):
             #Move all game objects
             self.left_bat.move(self.screen)
             self.right_bat.move(self.screen)
-            for obj in self.objlist:
-                obj.move(self.screen)
+            #for obj in self.objlist:
+            #    obj.move(self.screen)
+            self.objlist.update(self.screen)
 
             #Collision detection
             generate=False
@@ -273,7 +291,7 @@ class Game(object):
                 if obj.ToBeDestructed == True:
                     self.objlist.remove(obj)
                     del obj
-                elif obj.x < 0 or obj.x + obj.w > self.screen.get_size()[0]:
+                elif obj.rect.x < 0 or obj.rect.x + obj.rect.w > self.screen.get_size()[0]:
                     #calculate score and destroy the object if not only 1 ball left
                     if obj.destruction( self )==True:
                         self.objlist.remove(obj)
@@ -328,9 +346,9 @@ class Game(object):
         self.screen.blit(rightscore, rightscorerect)
         
 
-        for obj in self.objlist:
-            obj.draw( self.screen)
-        
+        #for obj in self.objlist:
+        #    obj.draw( self.screen)
+        self.objlist.draw(self.screen)
 
         pygame.display.update()
 
